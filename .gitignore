@@ -17,3 +17,4 @@ pizza_image_comparison_module\.streamlit
 # Ignore other common files
 *.log
 *.sqlite3
+.streamlit/secrets.toml
