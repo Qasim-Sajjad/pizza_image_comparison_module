@@ -1,0 +1,19 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.ipynb_checkpoints/
+
+# Ignore virtual environments
+env/
+venv/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Streamlit secrets
+pizza_image_comparison_module\.streamlit
+
+# Ignore other common files
+*.log
+*.sqlite3
