@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path='pizza_image_comparison_module\.env')
 
-# Setup Prompt for the image comparison model.
 def create_pizza_comparison_prompt(
     image1_name: str, 
     image2_name: str,
@@ -21,18 +20,41 @@ def create_pizza_comparison_prompt(
         for desc in descriptions:
             criteria_section += f"   - {desc}\n"
 
-    prompt = f"""You are a pizza expert analyzing two pizza images ({image1_name} and {image2_name}). Provide a concise analysis (maximum 250 words) based on the following criteria:
+    prompt = f"""As an expert pizza analyst, conduct a detailed comparative analysis between the reference pizza image ({image1_name}) and the evaluation pizza image ({image2_name}). Provide a thorough assessment based on the specified criteria, maintaining objectivity and precision.
 
-Essential Elements to Compare:
+Essential Evaluation Criteria:
 {criteria_section}
 
-Required Output Format:
-[ANALYSIS]
-Reference Image: List visible elements and their characteristics
-Comparison Image: Note presence/absence of elements compared to reference
-Conclusion: State if image meets criteria (Valid/Not Valid Pizza)
+Required Analysis Structure:
+1. Reference Standard Analysis:
+   - Establish baseline characteristics for each criterion
+   - Document key visual elements as benchmarks
+   - Note quality indicators that set the standard
 
-Important: Focus only on provided criteria. Be objective and concise.
+2. Comparative Evaluation:
+   - Systematically assess each criterion against the reference
+   - Identify deviations or alignments with specific examples
+   - Quantify differences where possible (e.g., coverage percentage, distribution patterns)
+
+3. Critical Analysis:
+   - Evaluate the impact of observed differences
+   - Assess whether deviations affect pizza authenticity
+   - Consider whether variations are acceptable within standard ranges
+
+4. Final Assessment:
+   - Clear determination: Valid Pizza / Not Valid Pizza
+   - List key factors supporting the decision
+   - Note any critical deficiencies or exceptional qualities
+
+Important Guidelines:
+- Maintain strict focus on provided criteria
+- Use specific examples from both images
+- Be precise and objective in comparisons
+- Limit total analysis to 300 words
+- Avoid subjective quality judgments
+- Reference specific visual evidence for each point
+
+[ANALYSIS]
 """
     return prompt
 
@@ -79,7 +101,7 @@ def analyze_pizza_images(prompt, image1_path, image2_path, api_key):
     response = openai.ChatCompletion.create(
         model="gpt-4o-mini",  # Note the correct model name
         messages=messages,
-        max_tokens=400,
+        max_tokens=450,
         temperature=0.7
     )
     
@@ -101,8 +123,6 @@ criteria = {
         "Melting characteristics"
     ]
 }
-
-
 
 # Replace with your OpenAI API key
 api_key = os.getenv(key='openai_api_key')

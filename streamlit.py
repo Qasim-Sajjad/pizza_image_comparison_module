@@ -1,14 +1,30 @@
 import streamlit as st
 import openai
-import base64
+import base64,io
 from typing import Dict, List
-from PIL import Image
-import io
-import os
 from dotenv import load_dotenv
+from PIL import Image
 
 # Load environment variables
 load_dotenv(dotenv_path='pizza_image_comparison_module\.env')
+
+def resize_image(uploaded_image, width=1024):
+    """Resize the uploaded image to a specific width while maintaining the aspect ratio."""
+    # Open the uploaded image using PIL
+    img = Image.open(uploaded_image)
+    format = img.format
+    # Calculate the new height maintaining the aspect ratio
+    aspect_ratio = img.height / img.width
+    new_height = int(width * aspect_ratio)
+    # Resize the image
+    img_resized = img.resize((width, new_height))
+
+    # Save the resized image to a BytesIO object to keep it in memory
+    img_byte_arr = io.BytesIO()
+    img_resized.save(img_byte_arr, format=format)  # or 'JPEG' depending on your image format
+    img_byte_arr.seek(0)  # Rewind the BytesIO object so it can be used again
+
+    return img_byte_arr
 
 def encode_image_from_upload(uploaded_file):
     """Encode uploaded image to base64 string"""
@@ -20,24 +36,49 @@ def create_pizza_comparison_prompt(
     image2_name: str,
     criteria: Dict[str, List[str]]
 ) -> str:
+    
+    # Build criteria section
     criteria_section = ""
     for idx, (element, descriptions) in enumerate(criteria.items(), 1):
         criteria_section += f"{idx}. {element}\n"
         for desc in descriptions:
             criteria_section += f"   - {desc}\n"
 
-    prompt = f"""You are a pizza expert analyzing two pizza images ({image1_name} and {image2_name}). Provide a concise analysis (maximum 250 words) based on the following criteria:
+    prompt = f"""As an expert pizza analyst, conduct a detailed comparative analysis between the reference pizza image ({image1_name}) and the evaluation pizza image ({image2_name}). Provide a thorough assessment based on the specified criteria, maintaining objectivity and precision.
 
-Essential Elements to Compare:
+Essential Evaluation Criteria:
 {criteria_section}
 
-Required Output Format:
-[ANALYSIS]
-Reference Image: List visible elements and their characteristics
-Comparison Image: Note presence/absence of elements compared to reference
-Conclusion: State if image meets criteria (Valid/Not Valid Pizza)
+Required Analysis Structure:
+1. Reference Standard Analysis:
+   - Establish baseline characteristics for each criterion
+   - Document key visual elements as benchmarks
+   - Note quality indicators that set the standard
 
-Important: Focus only on provided criteria. Be objective and concise.
+2. Comparative Evaluation:
+   - Systematically assess each criterion against the reference
+   - Identify deviations or alignments with specific examples
+   - Quantify differences where possible (e.g., coverage percentage, distribution patterns)
+
+3. Critical Analysis:
+   - Evaluate the impact of observed differences
+   - Assess whether deviations affect pizza authenticity
+   - Consider whether variations are acceptable within standard ranges
+
+4. Final Assessment:
+   - Clear determination: Valid Pizza / Not Valid Pizza
+   - List key factors supporting the decision
+   - Note any critical deficiencies or exceptional qualities
+
+Important Guidelines:
+- Maintain strict focus on provided criteria
+- Use specific examples from both images
+- Be precise and objective in comparisons
+- Limit total analysis to 250 words
+- Avoid subjective quality judgments
+- Reference specific visual evidence for each point
+
+[ANALYSIS]
 """
     return prompt
 
@@ -73,7 +114,7 @@ def analyze_pizza_images(prompt, image1_data, image2_data, api_key):
             model="gpt-4o-mini",
             messages=messages,
             max_tokens=400,
-            temperature=0.7
+            temperature=0.3
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -90,13 +131,13 @@ def main():
         st.subheader("Reference Pizza Image")
         image1 = st.file_uploader("Upload reference pizza image", type=["jpg", "jpeg", "png"])
         if image1:
-            st.image(image1, use_column_width=True)
+            st.image(image1, use_container_width=True)
     
     with col2:
         st.subheader("Comparison Pizza Image")
         image2 = st.file_uploader("Upload comparison pizza image", type=["jpg", "jpeg", "png"])
         if image2:
-            st.image(image2, use_column_width=True)
+            st.image(image2, use_container_width=True)
     
     # Criteria input section
     st.subheader("Evaluation Criteria")
@@ -128,6 +169,8 @@ def main():
         else:
             with st.spinner("Analyzing images..."):
                 # Encode images
+                # image1 = resize_image(uploaded_image=image1,width=1024)
+                # image2 = resize_image(uploaded_image=image2,width=1024)
                 image1_data = encode_image_from_upload(image1)
                 image2_data = encode_image_from_upload(image2)
                 

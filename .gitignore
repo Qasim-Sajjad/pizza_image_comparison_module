@@ -18,3 +18,4 @@ pizza_image_comparison_module\.streamlit
 *.log
 *.sqlite3
 .streamlit/secrets.toml
+.env
